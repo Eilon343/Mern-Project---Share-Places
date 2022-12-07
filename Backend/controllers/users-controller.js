@@ -20,8 +20,11 @@ const signUp = async (req, res, next) => {
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
-    return res.status(422).json(errors);
+    return next(
+      new HttpError("Invalid inputs passed, please check your data", 422)
+    );
   }
+
   const { name, email, password } = req.body;
 
   //Checking if user already exists.
@@ -44,8 +47,7 @@ const signUp = async (req, res, next) => {
   const newUser = new User({
     name: name,
     email: email,
-    image:
-      "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png",
+    image: req.file.path,
     password: password,
     places: [],
   });
@@ -84,12 +86,10 @@ const login = async (req, res, next) => {
     );
   }
 
-  res
-    .status(200)
-    .json({
-      message: "logged in",
-      user: existingUser.toObject({ getters: true }),
-    });
+  res.status(200).json({
+    message: "logged in",
+    user: existingUser.toObject({ getters: true }),
+  });
 };
 
 exports.getAllUsers = getAllUsers;

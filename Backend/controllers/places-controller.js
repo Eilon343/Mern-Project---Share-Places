@@ -1,10 +1,10 @@
-const uuid = require("uuid");
 const { validationResult } = require("express-validator");
 const HttpError = require("../models/http-error");
 const convertAddressToCords = require("../util/location");
 const Place = require("../models/place");
 const User = require("../models/user");
 const { default: mongoose } = require("mongoose");
+const fs = require("fs");
 
 const getPlaceById = async (req, res, next) => {
   const placeId = req.params.pid;
@@ -77,8 +77,7 @@ const createPlace = async (req, res, next) => {
     description: description,
     address: address,
     location: coordinates,
-    image:
-      "https://images.unsplash.com/photo-1428366890462-dd4baecf492b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8ZW1waXJlJTIwc3RhdGUlMjBidWlsZGluZ3xlbnwwfHwwfHw%3D&auto=format&fit=crop&w=400&q=60",
+    image: req.file.path,
     creator: creator,
   });
 
@@ -159,6 +158,8 @@ const deletePlace = async (req, res, next) => {
     return next(new HttpError("Could not find place for this id", 404));
   }
 
+  const imagePath = place.image;
+
   try {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -173,6 +174,9 @@ const deletePlace = async (req, res, next) => {
       500
     );
   }
+  fs.unlink(imagePath, (err) => {
+    console.log(err);
+  });
 
   res.status(200).json({ message: "Deleted place." });
 };
